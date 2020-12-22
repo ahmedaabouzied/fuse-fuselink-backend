@@ -1,10 +1,11 @@
 package main
 
 import (
+	"bitbucket.org/MoMoLab-dev/fuse.link-backend/config"
 	"context"
 	"flag"
 	"fmt"
-    "bitbucket.org/MoMoLab-dev/fuse-backend/config"
+	"os"
 )
 
 func main() {
