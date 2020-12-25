@@ -68,3 +68,13 @@ func (u *UserUsecase) GetByUsername(ctx context.Context, username string) (*enti
 	}
 	return user, nil
 }
+
+func (u *UserUsecase) GetByCognitoID(ctx context.Context, cognitoID string) (*entities.User, error) {
+	ctx, cancelFunc := context.WithCancel(ctx)
+	defer cancelFunc()
+	user, err := u.userRepo.GetByCognitoID(ctx, cognitoID)
+	if err != nil {
+		return nil, errors.Wrap(err, "repository error while getting user")
+	}
+	return user, nil
+}
