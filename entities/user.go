@@ -6,4 +6,5 @@ type User struct {
 	ID             primitive.ObjectID `bson:"_id,omitempty"`
 	Username       string             `bson:"username"`
 	SocialAccounts []SocialAccount    `bson:"social_accounts" `
+	CognitoUserID  string             `bson:"cognito_user_id"`
 }
