@@ -46,3 +46,29 @@ func (h *UserAPIHandler) CreateUser(c *gin.Context) {
 		"user": createdUser,
 	})
 }
+
+func (h *UserAPIHandler) UpdateUser(c *gin.Context) {
+	ctx := context.Background()
+	cognitoID, ok := c.Get(entities.UserIDContextKey)
+	if !ok {
+		utils.HandleAPIError(c, errors.Wrap(errors.New("token does not encode a cognito user ID"), utils.ErrorInvalidAuthorizationHeader.Error()))
+		return
+	}
+	ctx = context.WithValue(ctx, entities.UserIDContextKey, cognitoID)
+	userID := c.Param("id")
+	var updateUserReq entities.UpdateUserRequest
+	err := c.BindJSON(&updateUserReq)
+	if err != nil {
+		utils.HandleAPIError(c, errors.Wrap(err, utils.ErrorParsingRequest.Error()))
+		return
+	}
+	updatedUser, err := h.userUsecase.Update(ctx, userID, &updateUserReq)
+	if err != nil {
+		utils.HandleAPIError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"user": updatedUser,
+	})
+	return
+}

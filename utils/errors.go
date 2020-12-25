@@ -11,12 +11,18 @@ var (
 	// InvalidAuthorizationHeader is returned when received
 	// auth token is invalid.
 	ErrorInvalidAuthorizationHeader = errors.New("authorization error, please login again")
+	ErrorUnauthorizedRequest        = errors.New("unauthorized request, please try again")
+	NotFoundError                   = errors.New("not found")
+	ErrorUsernameAlreadyExists      = errors.New("username already exists, please choose another username")
+	RepositoryError                 = errors.New("repsitory error")
 	ErrorParsingRequest             = errors.New("error parsing request arguments, please try again")
 	ErrorCreatingUser               = errors.New("error creating user, please try again")
+	ErrorUpdatingUser               = errors.New("error updating user, please try again")
 
 	// appErrors maps errors to status codes.
 	appErrors = map[error]int{
 		ErrorInvalidAuthorizationHeader: http.StatusUnauthorized,
+		ErrorParsingRequest:             http.StatusBadRequest,
 	}
 )
 
@@ -38,9 +44,17 @@ func HandleAPIError(c *gin.Context, err error) {
 		statusCode = http.StatusInternalServerError
 	}
 
+	if errors.Is(err, RepositoryError) {
+		statusCode = http.StatusInternalServerError
+	}
+	if errors.Is(err, NotFoundError) {
+		statusCode = http.StatusNotFound
+	}
+
 	// Write to the HTTP response
 	c.JSON(statusCode, gin.H{
 		"error":   err,
 		"message": topErr,
 	})
+	return
 }
