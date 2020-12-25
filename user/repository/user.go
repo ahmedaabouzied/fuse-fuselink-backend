@@ -98,5 +98,4 @@ func (r *UserRepository) GetByUsername(ctx context.Context, username string) (*e
 		return nil, errors.Wrap(res.Err(), "error decoding returned result from DB")
 	}
 	return &user, nil
-
 }
