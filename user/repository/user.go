@@ -85,10 +85,26 @@ func (r *UserRepository) GetByID(ctx context.Context, ID string) (*entities.User
 	}
 	return &user, nil
 }
+
 func (r *UserRepository) GetByUsername(ctx context.Context, username string) (*entities.User, error) {
 	ctx, cancelFunc := context.WithCancel(ctx)
 	defer cancelFunc()
 	res := r.userCollection.FindOne(ctx, bson.M{"username": username})
+	if res.Err() != nil {
+		return nil, errors.Wrap(res.Err(), "error finding user record")
+	}
+	var user entities.User
+	err := res.Decode(&user)
+	if err != nil {
+		return nil, errors.Wrap(res.Err(), "error decoding returned result from DB")
+	}
+	return &user, nil
+}
+
+func (r *UserRepository) GetByCognitoID(ctx context.Context, cognitoID string) (*entities.User, error) {
+	ctx, cancelFunc := context.WithCancel(ctx)
+	defer cancelFunc()
+	res := r.userCollection.FindOne(ctx, bson.M{"cognito_user_id": cognitoID})
 	if res.Err() != nil {
 		return nil, errors.Wrap(res.Err(), "error finding user record")
 	}

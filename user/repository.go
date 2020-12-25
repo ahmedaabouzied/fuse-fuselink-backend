@@ -12,4 +12,5 @@ type UserRepository interface {
 	Delete(ctx context.Context, userID string) error
 	GetByID(ctx context.Context, ID string) (*entities.User, error)
 	GetByUsername(ctx context.Context, username string) (*entities.User, error)
+	GetByCognitoID(ctx context.Context, cognitoID string) (*entities.User, error)
 }
