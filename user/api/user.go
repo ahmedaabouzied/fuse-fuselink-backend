@@ -92,3 +92,33 @@ func (h *UserAPIHandler) DeleteUser(c *gin.Context) {
 	})
 	return
 }
+
+func (h *UserAPIHandler) GetUserByUsername(c *gin.Context) {
+	ctx := context.Background()
+	username := c.Param("username")
+	user, err := h.userUsecase.GetByUsername(ctx, username)
+	if err != nil {
+		utils.HandleAPIError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"user": user,
+	})
+	return
+}
+
+func (h *UserAPIHandler) GetUser(c *gin.Context) {
+	ctx := context.Background()
+	cognitoID, ok := c.Get(entities.UserIDContextKey)
+	if !ok {
+		utils.HandleAPIError(c, errors.Wrap(errors.New("token does not encode a cognito user ID"), utils.ErrorInvalidAuthorizationHeader.Error()))
+	}
+	user, err := h.userUsecase.GetByCognitoID(ctx, cognitoID.(string))
+	if err != nil {
+		utils.HandleAPIError(c, err)
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"user": user,
+	})
+	return
+}
