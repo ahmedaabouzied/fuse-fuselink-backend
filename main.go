@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bitbucket.org/MoMoLab-dev/fuse.link-backend/auth"
 	"bitbucket.org/MoMoLab-dev/fuse.link-backend/config"
+	userrepo "bitbucket.org/MoMoLab-dev/fuse.link-backend/user/repository"
 	"context"
 	"flag"
 	"fmt"
@@ -18,4 +20,16 @@ func main() {
 		panic(err)
 	}
 	defer db.Disconnect(ctx)
+	authHandler := &auth.JwtHandler{
+		TokenKeyURI: os.Getenv("COGNITO_JWT_KEY_URL"),
+	}
+	userRepo := userrepo.NewUserRepository(db.Database(*env))
+	repos := &config.Repositories{
+		UserRepository: userRepo,
+	}
+	serverConfig := &config.Server{
+		Repos:       repos,
+		AuthHandler: authHandler,
+	}
+	startServer(serverConfig)
 }
