@@ -72,3 +72,23 @@ func (h *UserAPIHandler) UpdateUser(c *gin.Context) {
 	})
 	return
 }
+
+func (h *UserAPIHandler) DeleteUser(c *gin.Context) {
+	ctx := context.Background()
+	cognitoID, ok := c.Get(entities.UserIDContextKey)
+	if !ok {
+		utils.HandleAPIError(c, errors.Wrap(errors.New("token does not encode a cognito user ID"), utils.ErrorInvalidAuthorizationHeader.Error()))
+		return
+	}
+	ctx = context.WithValue(ctx, entities.UserIDContextKey, cognitoID)
+	userID := c.Param("id")
+	deletedUser, err := h.userUsecase.Delete(ctx, userID)
+	if err != nil {
+		utils.HandleAPIError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"user": deletedUser,
+	})
+	return
+}
