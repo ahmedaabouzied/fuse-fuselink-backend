@@ -1,5 +1,9 @@
 package entities
 
+const (
+	UserIDContextKey string = "userID"
+)
+
 type CreateUserRequest struct {
 	Username string `json:"username"`
 }
