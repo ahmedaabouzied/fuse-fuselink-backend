@@ -3,8 +3,8 @@ package utils
 import (
 	"net/http"
 
+	"errors"
 	"github.com/gin-gonic/gin"
-	errors "github.com/pkg/errors"
 )
 
 var (
@@ -53,8 +53,8 @@ func HandleAPIError(c *gin.Context, err error) {
 
 	// Write to the HTTP response
 	c.JSON(statusCode, gin.H{
-		"error":   err,
-		"message": topErr,
+		"error":   err.Error(),
+		"message": topErr.Error(),
 	})
 	return
 }

@@ -3,12 +3,14 @@ package repository
 import (
 	"bitbucket.org/MoMoLab-dev/fuse.link-backend/entities"
 	"bitbucket.org/MoMoLab-dev/fuse.link-backend/user"
-	"github.com/pkg/errors"
+	"bitbucket.org/MoMoLab-dev/fuse.link-backend/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 
 	"context"
+	"errors"
+	"fmt"
 )
 
 type UserRepository struct {
@@ -26,7 +28,7 @@ func (r *UserRepository) Create(ctx context.Context, user *entities.User) (*enti
 	defer cancelFunc()
 	res, err := r.userCollection.InsertOne(ctx, user)
 	if err != nil {
-		return nil, errors.Wrap(err, "repository error while creating user record")
+		return nil, fmt.Errorf("%s: %w", "repository error while creating user record", err)
 	}
 	user.ID = res.InsertedID.(primitive.ObjectID)
 	return user, nil
@@ -43,10 +45,10 @@ func (r *UserRepository) Update(ctx context.Context, user *entities.User) (*enti
 	}}
 	res, err := r.userCollection.UpdateOne(ctx, bson.M{"_id": user.ID}, updateParams)
 	if err != nil {
-		return nil, errors.Wrap(err, "repository error while updating user")
+		return nil, fmt.Errorf("%s: %w", "repository error while updating user", err)
 	}
 	if res.MatchedCount != 1 {
-		return nil, errors.New("repository error while updating user fields")
+		return nil, fmt.Errorf("%s", "repository error while updating user fields")
 	}
 	return user, nil
 }
@@ -56,14 +58,14 @@ func (r *UserRepository) Delete(ctx context.Context, userID string) error {
 	defer cancelFunc()
 	objectID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
-		return errors.Wrap(err, "error parsing user ID")
+		return fmt.Errorf("%s: %w", "error parsing user ID", err)
 	}
 	res, err := r.userCollection.DeleteOne(ctx, bson.M{"_id": objectID})
 	if err != nil {
-		return errors.Wrap(err, "repository error while deleting user")
+		return fmt.Errorf("%s: %w", "repository error while deleting user", err)
 	}
 	if res.DeletedCount != 1 {
-		return errors.Wrap(err, "repository error while deleting user")
+		return fmt.Errorf("%s: %w", "repository error while deleting user", err)
 	}
 	return nil
 }
@@ -72,16 +74,16 @@ func (r *UserRepository) GetByID(ctx context.Context, ID string) (*entities.User
 	defer cancelFunc()
 	objectID, err := primitive.ObjectIDFromHex(ID)
 	if err != nil {
-		return nil, errors.Wrap(err, "error parsing user ID")
+		return nil, fmt.Errorf("%s: %w", "error parsing user ID", err)
 	}
 	res := r.userCollection.FindOne(ctx, bson.M{"_id": objectID})
 	if res.Err() != nil {
-		return nil, errors.Wrap(res.Err(), "error finding user record")
+		return nil, fmt.Errorf("%s: %w", "error finding user record", res.Err())
 	}
 	var user entities.User
 	err = res.Decode(&user)
 	if err != nil {
-		return nil, errors.Wrap(res.Err(), "error decoding returned result from DB")
+		return nil, fmt.Errorf("%s: %w", "error decoding returned result from DB", err)
 	}
 	return &user, nil
 }
@@ -91,12 +93,12 @@ func (r *UserRepository) GetByUsername(ctx context.Context, username string) (*e
 	defer cancelFunc()
 	res := r.userCollection.FindOne(ctx, bson.M{"username": username})
 	if res.Err() != nil {
-		return nil, errors.Wrap(res.Err(), "error finding user record")
+		return nil, fmt.Errorf("%s: %w", "error finding user record", res.Err())
 	}
 	var user entities.User
 	err := res.Decode(&user)
 	if err != nil {
-		return nil, errors.Wrap(res.Err(), "error decoding returned result from DB")
+		return nil, fmt.Errorf("%s: %w", "error decoding returned result from DB", err)
 	}
 	return &user, nil
 }
@@ -106,12 +108,15 @@ func (r *UserRepository) GetByCognitoID(ctx context.Context, cognitoID string) (
 	defer cancelFunc()
 	res := r.userCollection.FindOne(ctx, bson.M{"cognito_user_id": cognitoID})
 	if res.Err() != nil {
-		return nil, errors.Wrap(res.Err(), "error finding user record")
+		if errors.Is(res.Err(), mongo.ErrNoDocuments) {
+			return nil, fmt.Errorf("%s: %w", res.Err().Error(), utils.NotFoundError)
+		}
+		return nil, fmt.Errorf("%s: %w", res.Err().Error(), utils.RepositoryError)
 	}
 	var user entities.User
 	err := res.Decode(&user)
 	if err != nil {
-		return nil, errors.Wrap(res.Err(), "error decoding returned result from DB")
+		return nil, fmt.Errorf("%s: %w", "error decoding returned result from DB", err)
 	}
 	return &user, nil
 }
