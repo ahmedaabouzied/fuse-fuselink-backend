@@ -29,6 +29,10 @@ func startServer(serverConfig *config.Server) {
 func authMiddleware(serverConfig *config.Server) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			utils.HandleAPIError(c, fmt.Errorf("unauthorized: %w", utils.ErrorInvalidAuthorizationHeader))
+			return
+		}
 		token := strings.TrimPrefix(authHeader, "Bearer ")
 		parsedToken, err := serverConfig.AuthHandler.ParseAuthToken(token)
 		if err != nil {
