@@ -38,4 +38,4 @@ pipelines:
           name: Run latest Docker container
           script:
             - TAG=${BITBUCKET_COMMIT}
-            - ssh ahmedaabouzied@13.59.174.107 'aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 618918978733.dkr.ecr.us-east-1.amazonaws.com && docker pull 618918978733.dkr.ecr.us-east-1.amazonaws.com/fuse/fuselink-backend:latest && cd ./fuse && docker run --name fuselink_backend -d --network=host --env-file .env 618918978733.dkr.ecr.us-east-1.amazonaws.com/fuse/fuselink-backend'
+            - ssh ahmedaabouzied@13.59.174.107 'aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 618918978733.dkr.ecr.us-east-1.amazonaws.com && docker pull 618918978733.dkr.ecr.us-east-1.amazonaws.com/fuse/fuselink-backend:latest && cd ./fuselink && docker run --name fuselink_backend -d --network=host --env-file .env 618918978733.dkr.ecr.us-east-1.amazonaws.com/fuse/fuselink-backend'
