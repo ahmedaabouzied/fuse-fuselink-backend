@@ -35,4 +35,27 @@ func TestAuthMiddleare(t *testing.T) {
 		router.ServeHTTP(rr, request)
 		assert.Equal(t, http.StatusUnauthorized, rr.Code)
 	})
+	t.Run("trims Bearer prefix from auth header", func(t *testing.T) {
+		// setup a mock auth handler and server config
+		mockAuthHandler := &mockauth.AuthHandler{}
+		serverConfig := &config.Server{
+			AuthHandler: mockAuthHandler,
+		}
+
+		gin.SetMode(gin.TestMode)
+
+		// Return error on parsing token
+		mockAuthToken := "Bearer MOCK_AUTH_TOKEN"
+		trimmedAuthToken := "MOCK_AUTH_TOKEN"
+		mockAuthHandler.On("ParseAuthToken", trimmedAuthToken).Return(nil, nil)
+
+		// create a gin router with middlware
+		router := gin.Default()
+		router.GET("/test", authMiddleware(serverConfig))
+		request := httptest.NewRequest("GET", "/test", nil)
+		request.Header.Add("Authorization", mockAuthToken)
+		rr := httptest.NewRecorder()
+		router.ServeHTTP(rr, request)
+		mockAuthHandler.AssertCalled(t, "ParseAuthToken", trimmedAuthToken)
+	})
 }
