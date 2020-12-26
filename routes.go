@@ -31,12 +31,16 @@ func authMiddleware(serverConfig *config.Server) gin.HandlerFunc {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
 			utils.HandleAPIError(c, fmt.Errorf("unauthorized: %w", utils.ErrorInvalidAuthorizationHeader))
+			c.Abort()
 			return
 		}
 		token := strings.TrimPrefix(authHeader, "Bearer ")
 		parsedToken, err := serverConfig.AuthHandler.ParseAuthToken(token)
 		if err != nil {
 			err = errors.Wrap(err, utils.ErrorInvalidAuthorizationHeader.Error())
+			utils.HandleAPIError(c, fmt.Errorf("unauthorized: %w", err))
+			c.Abort()
+			return
 		}
 		c.Set(entities.UserIDContextKey, parsedToken["cognito:username"].(string))
 	}
