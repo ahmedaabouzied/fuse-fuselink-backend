@@ -25,15 +25,15 @@ pipelines:
       - step:
           name: Stop running containers
           script:
-            - ssh ahmedaabouzied@13.59.174.107 'docker stop fuselink_backend'
+            - ssh ahmedaabouzied@13.59.174.107 'docker stop fuselink_backend || true'
       - step:
           name: Remove old containers
           script:
-            - ssh ahmedaabouzied@13.59.174.107 'docker rm fuselink_backend'
+            - ssh ahmedaabouzied@13.59.174.107 'docker rm fuselink_backend || true'
       - step:
           name: Remove dangling images
           script:
-            - ssh ahmedaabouzied@13.59.174.107 'docker image prune -a -f'
+            - ssh ahmedaabouzied@13.59.174.107 'docker image prune -a -f || true'
       - step:
           name: Run latest Docker container
           script:
