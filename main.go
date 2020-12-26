@@ -4,6 +4,7 @@ import (
 	"bitbucket.org/MoMoLab-dev/fuse.link-backend/auth"
 	"bitbucket.org/MoMoLab-dev/fuse.link-backend/config"
 	userrepo "bitbucket.org/MoMoLab-dev/fuse.link-backend/user/repository"
+	userusecase "bitbucket.org/MoMoLab-dev/fuse.link-backend/user/usecase"
 	"context"
 	"flag"
 	"fmt"
@@ -27,9 +28,13 @@ func main() {
 	repos := &config.Repositories{
 		UserRepository: userRepo,
 	}
+	userUsecase := userusecase.NewUserUsecase(repos)
 	serverConfig := &config.Server{
 		Repos:       repos,
 		AuthHandler: authHandler,
+		Env:         *env,
+		Port:        os.Getenv("PORT"),
+		UserUsecase: userUsecase,
 	}
 	startServer(serverConfig)
 }
