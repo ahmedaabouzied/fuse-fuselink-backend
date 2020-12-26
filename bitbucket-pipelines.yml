@@ -18,7 +18,7 @@ pipelines:
             - aws configure set aws_access_key_id "${AWS_KEY}"
             - aws configure set aws_secret_access_key "${AWS_SECRET}"
             - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 618918978733.dkr.ecr.us-east-1.amazonaws.com
-            - docker build -t fuse/fuse-backend:latest .
+            - docker build -t fuse/fuselink-backend:latest .
             - docker tag fuse/fuselink-backend:latest 618918978733.dkr.ecr.us-east-1.amazonaws.com/fuse/fuselink-backend:latest
             - docker push 618918978733.dkr.ecr.us-east-1.amazonaws.com/fuse/fuselink-backend:latest
 
