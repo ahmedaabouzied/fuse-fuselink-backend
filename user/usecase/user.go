@@ -7,6 +7,7 @@ import (
 	"bitbucket.org/MoMoLab-dev/fuse.link-backend/config"
 	"bitbucket.org/MoMoLab-dev/fuse.link-backend/entities"
 	"bitbucket.org/MoMoLab-dev/fuse.link-backend/user"
+	"bitbucket.org/MoMoLab-dev/fuse.link-backend/utils"
 )
 
 type UserUsecase struct {
@@ -32,9 +33,16 @@ func (u *UserUsecase) CreateUser(ctx context.Context, user *entities.User) (*ent
 func (u *UserUsecase) Update(ctx context.Context, userID string, updateRequest *entities.UpdateUserRequest) (*entities.User, error) {
 	ctx, cancelFunc := context.WithCancel(ctx)
 	defer cancelFunc()
+	currentUserID := ctx.Value(entities.UserIDContextKey).(string)
+	if currentUserID == "" {
+		return nil, fmt.Errorf("%s: %w", "error getting current user ID", utils.ErrorUnauthorizedRequest)
+	}
 	userToUpdate, err := u.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", "repository error while getting user", err)
+	}
+	if userToUpdate.CognitoUserID != currentUserID {
+		return nil, fmt.Errorf("%s: %w", "unauthorized", utils.ErrorUnauthorizedRequest)
 	}
 	userToUpdate.Username = updateRequest.Username
 	userToUpdate.SocialAccounts = updateRequest.SocialAccounts
@@ -48,9 +56,16 @@ func (u *UserUsecase) Update(ctx context.Context, userID string, updateRequest *
 func (u *UserUsecase) Delete(ctx context.Context, userID string) (*entities.User, error) {
 	ctx, cancelFunc := context.WithCancel(ctx)
 	defer cancelFunc()
+	currentUserID := ctx.Value(entities.UserIDContextKey).(string)
+	if currentUserID == "" {
+		return nil, fmt.Errorf("%s: %w", "error getting current user ID", utils.ErrorUnauthorizedRequest)
+	}
 	userToDelete, err := u.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", "repository error while deleting user", err)
+	}
+	if userToDelete.CognitoUserID != currentUserID {
+		return nil, fmt.Errorf("%s: %w", "unauthorized", utils.ErrorUnauthorizedRequest)
 	}
 	err = u.userRepo.Delete(ctx, userID)
 	if err != nil {
