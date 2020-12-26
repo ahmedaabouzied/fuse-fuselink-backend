@@ -7,12 +7,22 @@ import (
 
 	"bitbucket.org/MoMoLab-dev/fuse.link-backend/config"
 	"bitbucket.org/MoMoLab-dev/fuse.link-backend/entities"
+	userapi "bitbucket.org/MoMoLab-dev/fuse.link-backend/user/api"
 	"bitbucket.org/MoMoLab-dev/fuse.link-backend/utils"
 	"github.com/gin-gonic/gin"
 )
 
 func startServer(serverConfig *config.Server) {
 	router := gin.Default()
+	userAPIHandler := userapi.NewUserAPI(serverConfig)
+	v1 := router.Group("/v1/api")
+	{
+		v1.GET("/user", authMiddleware(serverConfig), userAPIHandler.GetUser)
+		v1.GET("/user/:username", userAPIHandler.GetUserByUsername)
+		v1.POST("/user", authMiddleware(serverConfig), userAPIHandler.CreateUser)
+		v1.DELETE("/user/:id", authMiddleware(serverConfig), userAPIHandler.DeleteUser)
+		v1.PUT("/user/:id", authMiddleware(serverConfig), userAPIHandler.UpdateUser)
+	}
 	router.Run(fmt.Sprintf(":%s", serverConfig.Port))
 }
 
