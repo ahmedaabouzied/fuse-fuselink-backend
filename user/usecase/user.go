@@ -24,7 +24,7 @@ func (u *UserUsecase) CreateUser(ctx context.Context, user *entities.User) (*ent
 	defer cancelFunc()
 	createdUser, err := u.userRepo.Create(ctx, user)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", err, "repository error while creating user")
+		return nil, fmt.Errorf("%s: %w", "repository error while creating user", err)
 	}
 	return createdUser, nil
 }
@@ -34,13 +34,13 @@ func (u *UserUsecase) Update(ctx context.Context, userID string, updateRequest *
 	defer cancelFunc()
 	userToUpdate, err := u.userRepo.GetByID(ctx, userID)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", err, "repository error while getting user")
+		return nil, fmt.Errorf("%s: %w", "repository error while getting user", err)
 	}
 	userToUpdate.Username = updateRequest.Username
 	userToUpdate.SocialAccounts = updateRequest.SocialAccounts
 	updatedUser, err := u.userRepo.Update(ctx, userToUpdate)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", err, "repository error while updating user")
+		return nil, fmt.Errorf("%s: %w", "repository error while updating user", err)
 	}
 	return updatedUser, nil
 }
@@ -50,11 +50,11 @@ func (u *UserUsecase) Delete(ctx context.Context, userID string) (*entities.User
 	defer cancelFunc()
 	userToDelete, err := u.userRepo.GetByID(ctx, userID)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", err, "repository error while deleting user")
+		return nil, fmt.Errorf("%s: %w", "repository error while deleting user", err)
 	}
 	err = u.userRepo.Delete(ctx, userID)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", err, "repository error while deleting user")
+		return nil, fmt.Errorf("%s: %w", "repository error while deleting user", err)
 	}
 	return userToDelete, nil
 }
@@ -64,7 +64,7 @@ func (u *UserUsecase) GetByUsername(ctx context.Context, username string) (*enti
 	defer cancelFunc()
 	user, err := u.userRepo.GetByUsername(ctx, username)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", err, "repository error while getting user")
+		return nil, fmt.Errorf("%s: %w", "repository error while getting user", err)
 	}
 	return user, nil
 }
