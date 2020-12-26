@@ -38,7 +38,7 @@ func authMiddleware(serverConfig *config.Server) gin.HandlerFunc {
 		parsedToken, err := serverConfig.AuthHandler.ParseAuthToken(token)
 		if err != nil {
 			err = errors.Wrap(err, utils.ErrorInvalidAuthorizationHeader.Error())
-			utils.HandleAPIError(c, fmt.Errorf("unauthorized: %w", err))
+			utils.HandleAPIError(c, fmt.Errorf("%s: %w", err.Error(), utils.ErrorInvalidAuthorizationHeader))
 			c.Abort()
 			return
 		}
