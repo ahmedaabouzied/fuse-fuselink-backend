@@ -28,11 +28,13 @@ func (h *UserAPIHandler) CreateUser(c *gin.Context) {
 	cognitoID, ok := c.Get(entities.UserIDContextKey)
 	if !ok {
 		utils.HandleAPIError(c, errors.Wrap(errors.New("token does not encode a cognito user ID"), utils.ErrorInvalidAuthorizationHeader.Error()))
+		return
 	}
 	var userReq entities.CreateUserRequest
 	err := c.BindJSON(&userReq)
 	if err != nil {
 		utils.HandleAPIError(c, errors.Wrap(err, utils.ErrorParsingRequest.Error()))
+		return
 	}
 	user := &entities.User{
 		Username:      userReq.Username,
@@ -41,6 +43,8 @@ func (h *UserAPIHandler) CreateUser(c *gin.Context) {
 	createdUser, err := h.userUsecase.CreateUser(ctx, user)
 	if err != nil {
 		err = errors.Wrap(err, utils.ErrorCreatingUser.Error())
+		utils.HandleAPIError(c, err)
+		return
 	}
 	c.JSON(http.StatusCreated, gin.H{
 		"user": createdUser,
@@ -112,10 +116,12 @@ func (h *UserAPIHandler) GetUser(c *gin.Context) {
 	cognitoID, ok := c.Get(entities.UserIDContextKey)
 	if !ok {
 		utils.HandleAPIError(c, errors.Wrap(errors.New("token does not encode a cognito user ID"), utils.ErrorInvalidAuthorizationHeader.Error()))
+		return
 	}
 	user, err := h.userUsecase.GetByCognitoID(ctx, cognitoID.(string))
 	if err != nil {
 		utils.HandleAPIError(c, err)
+		return
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"user": user,
