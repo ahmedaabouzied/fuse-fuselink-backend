@@ -1,0 +1,41 @@
+image: atlassian/default-image:2
+
+pipelines:
+  branches:
+    master:
+      - step:
+          name: Build and push Docker image
+          services:
+            - docker
+          caches:
+            - pip
+          script:
+            - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            - unzip awscliv2.zip
+            - ./aws/install
+            - IMAGE="618918978733.dkr.ecr.us-east-1.amazonaws.com/fuse/fuselink-backend"
+            - TAG=${BITBUCKET_COMMIT}
+            - aws configure set aws_access_key_id "${AWS_KEY}"
+            - aws configure set aws_secret_access_key "${AWS_SECRET}"
+            - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 618918978733.dkr.ecr.us-east-1.amazonaws.com
+            - docker build -t fuse/fuse-backend:latest .
+            - docker tag fuse/fuselink-backend:latest 618918978733.dkr.ecr.us-east-1.amazonaws.com/fuse/fuselink-backend:latest
+            - docker push 618918978733.dkr.ecr.us-east-1.amazonaws.com/fuse/fuselink-backend:latest
+
+      - step:
+          name: Stop running containers
+          script:
+            - ssh ahmedaabouzied@13.59.174.107 'docker stop fuselink_backend'
+      - step:
+          name: Remove old containers
+          script:
+            - ssh ahmedaabouzied@13.59.174.107 'docker rm fuselink_backend'
+      - step:
+          name: Remove dangling images
+          script:
+            - ssh ahmedaabouzied@13.59.174.107 'docker image prune -a -f'
+      - step:
+          name: Run latest Docker container
+          script:
+            - TAG=${BITBUCKET_COMMIT}
+            - ssh ahmedaabouzied@13.59.174.107 'aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 618918978733.dkr.ecr.us-east-1.amazonaws.com && docker pull 618918978733.dkr.ecr.us-east-1.amazonaws.com/fuse/fuselink-backend:latest && cd ./fuse && docker run --name fuselink_backend -d --network=host --env-file .env 618918978733.dkr.ecr.us-east-1.amazonaws.com/fuse/fuselink-backend'
