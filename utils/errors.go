@@ -53,8 +53,7 @@ func HandleAPIError(c *gin.Context, err error) {
 
 	// Write to the HTTP response
 	c.JSON(statusCode, gin.H{
-		"error":   err.Error(),
-		"message": topErr.Error(),
+		"error": err.Error(),
 	})
 	return
 }
