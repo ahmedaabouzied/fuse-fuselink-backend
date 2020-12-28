@@ -14,7 +14,7 @@ var (
 	ErrorUnauthorizedRequest        = errors.New("unauthorized request, please try again")
 	NotFoundError                   = errors.New("not found")
 	ErrorUsernameAlreadyExists      = errors.New("username already exists, please choose another username")
-	RepositoryError                 = errors.New("repsitory error")
+	RepositoryError                 = errors.New("repository error")
 	ErrorParsingRequest             = errors.New("error parsing request arguments, please try again")
 	ErrorCreatingUser               = errors.New("error creating user, please try again")
 	ErrorUpdatingUser               = errors.New("error updating user, please try again")

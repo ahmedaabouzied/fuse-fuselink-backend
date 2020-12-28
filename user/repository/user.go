@@ -28,7 +28,7 @@ func (r *UserRepository) Create(ctx context.Context, user *entities.User) (*enti
 	defer cancelFunc()
 	res, err := r.userCollection.InsertOne(ctx, user)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", "repository error while creating user record", err)
+		return nil, fmt.Errorf("%s: %w", utils.RepositoryError.Error(), err)
 	}
 	user.ID = res.InsertedID.(primitive.ObjectID)
 	return user, nil

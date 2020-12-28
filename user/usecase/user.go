@@ -25,7 +25,7 @@ func (u *UserUsecase) CreateUser(ctx context.Context, user *entities.User) (*ent
 	defer cancelFunc()
 	createdUser, err := u.userRepo.Create(ctx, user)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", "repository error while creating user", err)
+		return nil, fmt.Errorf("%s: %w", err.Error(), utils.RepositoryError)
 	}
 	return createdUser, nil
 }
@@ -33,10 +33,11 @@ func (u *UserUsecase) CreateUser(ctx context.Context, user *entities.User) (*ent
 func (u *UserUsecase) Update(ctx context.Context, userID string, updateRequest *entities.UpdateUserRequest) (*entities.User, error) {
 	ctx, cancelFunc := context.WithCancel(ctx)
 	defer cancelFunc()
-	currentUserID := ctx.Value(entities.UserIDContextKey).(string)
-	if currentUserID == "" {
+	ctxUserID := ctx.Value(entities.UserIDContextKey)
+	if ctxUserID == nil {
 		return nil, fmt.Errorf("%s: %w", "error getting current user ID", utils.ErrorUnauthorizedRequest)
 	}
+	currentUserID := ctxUserID.(string)
 	userToUpdate, err := u.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", "repository error while getting user", err)
