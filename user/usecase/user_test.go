@@ -54,4 +54,32 @@ func TestUpdateUser(t *testing.T) {
 		assert.Nil(t, res)
 		assert.True(t, errors.Is(err, utils.ErrorUnauthorizedRequest))
 	})
+	t.Run("Handle repository errog with getting user", func(t *testing.T) {
+		mockUserRepo := &mockuserrepo.UserRepository{}
+		repos := config.Repositories{
+			UserRepository: mockUserRepo,
+		}
+		userUsecase := NewUserUsecase(&repos)
+		testCtx := context.WithValue(context.Background(), entities.UserIDContextKey, "USER_ID")
+		mockUserRepo.On("GetByID", mock.Anything, "USER_ID").Return(nil, errors.New("REPOSITORY_ERROR"))
+		res, err := userUsecase.Update(testCtx, "USER_ID", &entities.UpdateUserRequest{})
+		assert.Nil(t, res)
+		assert.True(t, errors.Is(err, utils.RepositoryError))
+	})
+	t.Run("Returns error when user ID does not match current user", func(t *testing.T) {
+		mockUserRepo := &mockuserrepo.UserRepository{}
+		repos := config.Repositories{
+			UserRepository: mockUserRepo,
+		}
+		userUsecase := NewUserUsecase(&repos)
+		testUser := &entities.User{
+			CognitoUserID: "ANOTHER_USER_ID",
+		}
+		testCtx := context.WithValue(context.Background(), entities.UserIDContextKey, "USER_ID")
+		mockUserRepo.On("GetByID", mock.Anything, "USER_ID").Return(testUser, nil)
+		res, err := userUsecase.Update(testCtx, "USER_ID", &entities.UpdateUserRequest{})
+		assert.NotNil(t, err)
+		assert.Nil(t, res)
+		assert.True(t, errors.Is(err, utils.ErrorUnauthorizedRequest))
+	})
 }

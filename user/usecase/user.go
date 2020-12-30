@@ -33,14 +33,13 @@ func (u *UserUsecase) CreateUser(ctx context.Context, user *entities.User) (*ent
 func (u *UserUsecase) Update(ctx context.Context, userID string, updateRequest *entities.UpdateUserRequest) (*entities.User, error) {
 	ctx, cancelFunc := context.WithCancel(ctx)
 	defer cancelFunc()
-	ctxUserID := ctx.Value(entities.UserIDContextKey)
-	if ctxUserID == nil {
-		return nil, fmt.Errorf("%s: %w", "error getting current user ID", utils.ErrorUnauthorizedRequest)
+	currentUserID, err := utils.ExtractContextUserID(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", err.Error(), utils.ErrorUnauthorizedRequest)
 	}
-	currentUserID := ctxUserID.(string)
 	userToUpdate, err := u.userRepo.GetByID(ctx, userID)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", "repository error while getting user", err)
+		return nil, fmt.Errorf("%s: %w", err.Error(), utils.RepositoryError)
 	}
 	if userToUpdate.CognitoUserID != currentUserID {
 		return nil, fmt.Errorf("%s: %w", "unauthorized", utils.ErrorUnauthorizedRequest)
