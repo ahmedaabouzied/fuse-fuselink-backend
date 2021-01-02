@@ -110,3 +110,62 @@ func TestUpdateUser(t *testing.T) {
 		mockUserRepo.AssertCalled(t, "Update", mock.Anything, updatedTestUser)
 	})
 }
+
+func TestDeleteUser(t *testing.T) {
+	t.Run("Handles missing user ID in context", func(t *testing.T) {
+		mockUserRepo := &mockuserrepo.UserRepository{}
+		repos := config.Repositories{
+			UserRepository: mockUserRepo,
+		}
+		userUsecase := NewUserUsecase(&repos)
+		emptyCtx := context.Background()
+		res, err := userUsecase.Delete(emptyCtx, "userID")
+		assert.Nil(t, res)
+		assert.True(t, errors.Is(err, utils.ErrorUnauthorizedRequest))
+	})
+	t.Run("Handle repository errog with getting user", func(t *testing.T) {
+		mockUserRepo := &mockuserrepo.UserRepository{}
+		repos := config.Repositories{
+			UserRepository: mockUserRepo,
+		}
+		userUsecase := NewUserUsecase(&repos)
+		testCtx := context.WithValue(context.Background(), entities.UserIDContextKey, "USER_ID")
+		mockUserRepo.On("GetByID", mock.Anything, "USER_ID").Return(nil, errors.New("REPOSITORY_ERROR"))
+		res, err := userUsecase.Delete(testCtx, "USER_ID")
+		assert.Nil(t, res)
+		assert.True(t, errors.Is(err, utils.RepositoryError))
+	})
+	t.Run("Returns error when user ID does not match current user", func(t *testing.T) {
+		mockUserRepo := &mockuserrepo.UserRepository{}
+		repos := config.Repositories{
+			UserRepository: mockUserRepo,
+		}
+		userUsecase := NewUserUsecase(&repos)
+		testUser := &entities.User{
+			CognitoUserID: "ANOTHER_USER_ID",
+		}
+		testCtx := context.WithValue(context.Background(), entities.UserIDContextKey, "USER_ID")
+		mockUserRepo.On("GetByID", mock.Anything, "USER_ID").Return(testUser, nil)
+		res, err := userUsecase.Delete(testCtx, "USER_ID")
+		assert.NotNil(t, err)
+		assert.Nil(t, res)
+		assert.True(t, errors.Is(err, utils.ErrorUnauthorizedRequest))
+	})
+	t.Run("Calls Delete user repo method with the correct user ID", func(t *testing.T) {
+		mockUserRepo := &mockuserrepo.UserRepository{}
+		repos := config.Repositories{
+			UserRepository: mockUserRepo,
+		}
+		userUsecase := NewUserUsecase(&repos)
+		testUser := &entities.User{
+			CognitoUserID: "USER_ID",
+		}
+		testCtx := context.WithValue(context.Background(), entities.UserIDContextKey, "USER_ID")
+		mockUserRepo.On("GetByID", mock.Anything, "USER_ID").Return(testUser, nil)
+		mockUserRepo.On("Delete", mock.Anything, mock.Anything).Return(nil, nil)
+		_, err := userUsecase.Delete(testCtx, "USER_ID")
+		assert.Nil(t, err)
+		mockUserRepo.AssertCalled(t, "Delete", mock.Anything, "USER_ID")
+	})
+
+}
