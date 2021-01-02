@@ -82,4 +82,31 @@ func TestUpdateUser(t *testing.T) {
 		assert.Nil(t, res)
 		assert.True(t, errors.Is(err, utils.ErrorUnauthorizedRequest))
 	})
+	t.Run("Set the updated fields from the updates object", func(t *testing.T) {
+		mockUserRepo := &mockuserrepo.UserRepository{}
+		repos := config.Repositories{
+			UserRepository: mockUserRepo,
+		}
+		userUsecase := NewUserUsecase(&repos)
+		testUser := &entities.User{
+			CognitoUserID: "USER_ID",
+		}
+		testCtx := context.WithValue(context.Background(), entities.UserIDContextKey, "USER_ID")
+		userUpdateReq := &entities.UpdateUserRequest{
+			Username: "updated",
+			SocialAccounts: []entities.SocialAccount{{
+				Platform: "facebook",
+			}},
+		}
+		updatedTestUser := &entities.User{
+			CognitoUserID:  testUser.CognitoUserID,
+			Username:       userUpdateReq.Username,
+			SocialAccounts: userUpdateReq.SocialAccounts,
+		}
+		mockUserRepo.On("GetByID", mock.Anything, "USER_ID").Return(testUser, nil)
+		mockUserRepo.On("Update", mock.Anything, mock.Anything).Return(nil, nil)
+		_, err := userUsecase.Update(testCtx, "USER_ID", userUpdateReq)
+		assert.Nil(t, err)
+		mockUserRepo.AssertCalled(t, "Update", mock.Anything, updatedTestUser)
+	})
 }
