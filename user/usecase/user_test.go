@@ -167,5 +167,22 @@ func TestDeleteUser(t *testing.T) {
 		assert.Nil(t, err)
 		mockUserRepo.AssertCalled(t, "Delete", mock.Anything, "USER_ID")
 	})
+}
 
+func TestGetByUsername(t *testing.T) {
+	t.Run("Calls GetByUsername with the correct username", func(t *testing.T) {
+		mockUserRepo := &mockuserrepo.UserRepository{}
+		repos := config.Repositories{
+			UserRepository: mockUserRepo,
+		}
+		userUsecase := NewUserUsecase(&repos)
+		testUser := &entities.User{
+			CognitoUserID: "USER_ID",
+		}
+		testCtx := context.WithValue(context.Background(), entities.UserIDContextKey, "USER_ID")
+		mockUserRepo.On("GetByUsername", mock.Anything, "username").Return(testUser, nil)
+		_, err := userUsecase.GetByUsername(testCtx, "username")
+		assert.Nil(t, err)
+		mockUserRepo.AssertCalled(t, "GetByUsername", mock.Anything, "username")
+	})
 }
