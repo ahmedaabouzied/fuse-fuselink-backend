@@ -186,3 +186,21 @@ func TestGetByUsername(t *testing.T) {
 		mockUserRepo.AssertCalled(t, "GetByUsername", mock.Anything, "username")
 	})
 }
+
+func TestGetByCognitoID(t *testing.T) {
+	t.Run("Calls GetByCognitoID with the correct ID", func(t *testing.T) {
+		mockUserRepo := &mockuserrepo.UserRepository{}
+		repos := config.Repositories{
+			UserRepository: mockUserRepo,
+		}
+		userUsecase := NewUserUsecase(&repos)
+		testUser := &entities.User{
+			CognitoUserID: "USER_ID",
+		}
+		testCtx := context.WithValue(context.Background(), entities.UserIDContextKey, "USER_ID")
+		mockUserRepo.On("GetByCognitoID", mock.Anything, "username").Return(testUser, nil)
+		_, err := userUsecase.GetByCognitoID(testCtx, "username")
+		assert.Nil(t, err)
+		mockUserRepo.AssertCalled(t, "GetByCognitoID", mock.Anything, "username")
+	})
+}
